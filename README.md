@@ -1,55 +1,52 @@
-# NoLimits 2 Utilities
+# Blender NoLimits 2 Utilities
 
-The curve of a NoLimits 2 track as a C++ library, plus a Blender extension that imports
-a `.nl2park` as curve objects.
+A blender Add-on with utilities for the NoLimits 2 Roller Coaster Simulation.
+It replaces [BlenderNoLimitsCSVImporter](https://github.com/geforcefan/BlenderNoLimitsCSVImporter), which is archived now.
 
-`nolimits2track` builds the same track from vertices and roll points as NoLimits 2 does: the
-NURBS interval chain by NL2's rules (open, periodic, strict), nodes uniform in arc
-length, parallel transport, roll as a cubic spline over arc length, the heartline as an
-offset curve. Measured against NL2's own frame export, Hybris (2.5 km, closed circuit)
-stays within 0.01 mm in position and 0.001 degrees per axis.
+<img src="docs/blender-track.jpg?raw=True" width="800">
 
-## Layout
+## Supported features
+- [x] Track import from a park (.nl2park)
+- [x] Track import from a track spline export (.csv)
+- [ ] Terrain import
 
-- `src/`: the library (namespace and CMake target `nolimits2track`), headers and sources side
-  by side. `curve`, `math`, `spline`, `nurbs`, `roll` are the curve and depend on glm
-  only. `track` is the track description (`Track` with `Track::Vertex`,
-  `Track::RollPoint`, `closed`, `heartline_position`) and `Track::build_curve(nodes_per_meter, heartline)`. Nothing in here knows Blender or park files.
-- `blender/nolimits2_utilities/`: the Blender extension (folder name equals the manifest id, so a
-  local extension repository pointing at `blender/` finds it as `bl_ext.<repo>.nolimits2_utilities`).
-  Add > Curve > NoLimits 2 Track creates a curve object; its panel in the curve data tab
-  takes the park file, coaster, track, spline (center of rails or editor spline) and
-  the heartline; the curve has NL2's four nodes per meter. File > Import > NoLimits 2 Park creates these objects for
-  every track of a park at once, the editor spline only when the heartline is offset. The `.nl2park` bytes live on the object, every change
-  rebuilds the POLY spline through `foreach_set`. The heartline position comes from the
-  park (spline position mode center of rails, coaster style table or the custom offset
-  stored in the file); the Custom Heartline switch overrides it. Terrain gets its own
-  module next to `track.py` later. Wheels go into `blender/nolimits2_utilities/wheels/`.
-- `blender/nolimits2_utilities_debug/`: throwaway tools while developing, not part of the release
-  build. Install it from disk when needed; Object > Add Rails sweeps rails along the
-  selected curves, style B&M Hyper or Intamin (modern) or custom radius and gauge.
-- `blender/nolimits2/`: the python module `nolimits2` (wheel, abi3 from Python 3.12)
-  with `Park::read`, `build_curve`, `BlenderSpline`, and `blender_spline.hpp`, which turns a
-  curve into a Blender spline.
-  and the extension, import headless in Blender, compare with NL2's CSV export.
-- `cmake/`: glm and libnolimits via FetchContent, plus the libnolimits patch that keeps
-  vertices as doubles.
-- `tests/curvetest.cpp`: helix, circle, offset, and a synthetic track.
+## Installation
+* Open the preferences, *Edit > Preferences*.
 
-## Build
+  <img src="docs/blender-preferences.jpg?raw=True" width="340">
 
-    python3.12 blender/tools/pack_extension.py
+* Select the *Get Extensions* category panel on the left side of the window. Open the *Repositories* dropdown, press the plus button and choose *Add Remote Repository*.
 
-Builds the wheel for this platform and packs the extension into
-`build/blender/`. Needs CPython 3.12 or newer with headers, Blender's own
-Python has none.
+  <img src="docs/blender-add-repository.jpg?raw=True" width="600">
 
-## Test
+* Enter `https://geforcefan.github.io/blender-nolimits2-utilities/index.json` as the url and confirm with *Create*.
 
-    cd build && ctest
+  <img src="docs/blender-repository-url.jpg?raw=True" width="380">
 
-Only the library is tested; park files are not part of the repository.
+* Search for *NoLimits 2 Utilities* and press *Install*.
 
-## License
+  <img src="docs/blender-install.jpg?raw=True" width="500">
 
-GPL-3.0-or-later, see LICENSE. Blender add-ons must be GPL compatible.
+* Activate it by checking the check box left of the Add-on entry.
+
+  <img src="docs/blender-addons.jpg?raw=True" width="500">
+
+Or take the zip from the [releases](https://github.com/geforcefan/blender-nolimits2-utilities/releases) and install it with *Install from Disk*.
+
+## Usage
+### Tracks
+* Import from *File > Import > NoLimits 2 Curve (.nl2park, .csv)*. A park gives you a curve object per track, a track spline export gives you one.
+
+  <img src="docs/blender-import.jpg?raw=True" width="500">
+
+* Or add an empty one from *Add > Curve > NoLimits 2 Curve* and pick the file afterwards.
+
+  <img src="docs/blender-add-curve.jpg?raw=True" width="500">
+
+* Select the curve object and press the green curve icon to open its data properties.
+
+  <img src="docs/blender-outliner.jpg?raw=True" width="320">
+
+* The fields depend on the file. A park shows the coaster, the track and the choice between center of rails and editor spline, a csv export shows none of them. File and heartline are always there. Every change rebuilds the curve, *Reload* reads the file again after you saved in NL2.
+
+  <img src="docs/blender-curve-panel.jpg?raw=True" width="360">

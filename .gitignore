@@ -1,7 +1,10 @@
 build/
 build-*/
-blender/nl2park/wheels/
 __pycache__/
+.venv/
+.parity/
+.pytest_cache/
 .DS_Store
 *_backup
 .claude/
+nolimits2_utilities/
