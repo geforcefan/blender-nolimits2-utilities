@@ -1,0 +1,7 @@
+build/
+build-*/
+blender/nl2park/wheels/
+__pycache__/
+.DS_Store
+*_backup
+.claude/

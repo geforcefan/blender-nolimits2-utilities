@@ -1,0 +1,26 @@
+diff --git a/libnolimits/File/File.cpp b/libnolimits/File/File.cpp
+index bf01a20..6dced56 100644
+--- a/libnolimits/File/File.cpp
++++ b/libnolimits/File/File.cpp
+@@ -222,7 +222,7 @@ namespace NoLimits {
+         }
+ 
+         glm::dvec3 File::readDoubleVec3() {
+-            return glm::vec3(readDouble(), readDouble(), readDouble());
++            return glm::dvec3(readDouble(), readDouble(), readDouble());
+         }
+ 
+         void File::writeDoubleVec3(glm::dvec3 vec) {
+diff --git a/libnolimits/NL2/Coaster/Track/Vertex.h b/libnolimits/NL2/Coaster/Track/Vertex.h
+index 1d72246..dedc54c 100644
+--- a/libnolimits/NL2/Coaster/Track/Vertex.h
++++ b/libnolimits/NL2/Coaster/Track/Vertex.h
+@@ -40,7 +40,7 @@ namespace NoLimits {
+             void setStrict(bool value);
+ 
+         private:
+-            glm::vec4 position;
++            glm::dvec4 position;
+             bool locked;
+             bool strict;
+         };

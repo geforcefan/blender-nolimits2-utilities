@@ -1,0 +1,18 @@
+schema_version = "1.0.0"
+
+id = "nolimits2_utilities"
+version = "0.1.0"
+name = "NoLimits 2 Utilities"
+tagline = "Utilities for NoLimits 2, track import and more"
+maintainer = "Ercan Akyürek <ercan.akyuerek@gmail.com>"
+type = "add-on"
+website = "https://github.com/geforcefan/blender-nolimits2-utilities"
+copyright = ["2026 Ercan Akyürek"]
+blender_version_min = "5.1.0"
+license = ["SPDX:GPL-3.0-or-later"]
+tags = ["Import-Export"]
+platforms = ["macos-arm64"]
+wheels = ["./wheels/nolimits2-0.1.0-cp312-abi3-macosx_11_0_arm64.whl"]
+
+[build]
+paths_exclude_pattern = ["__pycache__/", "/.*"]
