@@ -1,9 +1,12 @@
 import struct
+import zlib
+
+import numpy
 
 from ..math.nurbs import NurbsVertex
 from ..math.scalar import clamp
 from ..math.vector import vec2, vec4
-from ..park import Coaster, Park
+from ..park import Coaster, Park, Terrain
 from ..tracks.nurbs_track import NurbsTrack
 
 park_chunks = ("INFO", "COAS", "TERC", "SCEN", "USPK")
@@ -31,25 +34,32 @@ class Reader:
     def read_null(self, count):
         self.seek(self.position + count)
 
-    def read_unsigned8(self):
+    def read_uint8(self):
         taken = self.read(1)
         return taken[0] if taken else 0
 
     def read_boolean(self):
-        return self.read_unsigned8() != 0
+        return self.read_uint8() != 0
 
-    def read_unsigned_integer(self):
+    def read_uint16_array(self, count):
+        return numpy.frombuffer(self.read(count * 2), dtype=">u2")
+
+    def read_uint32(self):
         taken = self.read(4)
         return struct.unpack(">I", taken)[0] if len(taken) == 4 else 0
+
+    def read_float(self):
+        taken = self.read(4)
+        return struct.unpack(">f", taken)[0] if len(taken) == 4 else 0.0
 
     def read_double(self):
         taken = self.read(8)
         return struct.unpack(">d", taken)[0] if len(taken) == 8 else 0.0
 
-    def read_double_vec2(self):
+    def read_dvec2(self):
         return vec2(self.read_double(), self.read_double())
 
-    def read_double_vec4(self):
+    def read_dvec4(self):
         return vec4(self.read_double(), self.read_double(), self.read_double(), self.read_double())
 
     def read_string(self):
@@ -65,11 +75,16 @@ class Reader:
         return taken.decode("latin-1").strip() if len(taken) == 4 else ""
 
     def read_chunk(self):
-        chunk_size = self.read_unsigned_integer()
+        chunk_size = self.read_uint32()
         self.seek(self.tell() - 4)
         content = Reader(self.read(chunk_size + 4))
         content.read_null(4)
         return content
+
+    def read_compressed(self):
+        self.read_null(4)
+        compressed_size = self.read_uint32()
+        return Reader(zlib.decompress(self.read(compressed_size)))
 
     def next_chunk(self, names, start):
         found_at = len(self.buffer)
@@ -104,6 +119,8 @@ def read_park(file):
         content = file.read_chunk()
         if chunk == "COAS":
             park.coasters.append(read_coaster(content))
+        if chunk == "TERC":
+            park.terrain = read_terrain(content)
         start = file.tell()
 
 
@@ -111,13 +128,13 @@ def read_coaster(file):
     coaster = Coaster(name=file.read_string())
 
     file.read_null(3)
-    spline_position = file.read_unsigned8()
-    spline_position_offset = file.read_double_vec2()
+    spline_position = file.read_uint8()
+    spline_position_offset = file.read_dvec2()
 
     file.read_string()
 
     file.read_null(3)
-    style_type = file.read_unsigned8()
+    style_type = file.read_uint8()
     file.read_null(44)
 
     heartline_position = Park.heartline_position(spline_position, spline_position_offset, style_type)
@@ -134,6 +151,32 @@ def read_coaster(file):
         start = file.tell()
 
 
+def read_terrain(file):
+    width = file.read_float()
+    file.read_float()
+    quads = file.read_uint32()
+    file.read_null(68)
+    file.read_string()
+    file.read_string()
+    file.read_null(27)
+    file.read_null(4 * file.read_uint32())
+    file.read_null(19)
+    for _ in range(file.read_uint32()):
+        file.read_null(1)
+        for _ in range(6):
+            file.read_string()
+        file.read_null(53)
+        file.read_string()
+        file.read_null(37)
+    file.read_null(64)
+    heights = file.read_compressed()
+    columns = heights.read_uint32()
+    rows = heights.read_uint32()
+    absolute = numpy.cumsum(heights.read_uint16_array(columns * rows), dtype=numpy.uint16)
+    return Terrain(quad_size=width / quads,
+                   heights=((absolute.astype(numpy.float64) - 8191) / 32.0).reshape(rows, columns))
+
+
 def read_custom_track(file):
     track = NurbsTrack(closed=file.read_boolean())
 
@@ -143,7 +186,7 @@ def read_custom_track(file):
 
     file.read_null(53)
 
-    number_of_control_points = file.read_unsigned_integer()
+    number_of_control_points = file.read_uint32()
     track.end_roll_point.position = number_of_control_points - 1
 
     for _ in range(number_of_control_points):
@@ -163,7 +206,7 @@ def read_custom_track(file):
 
 
 def read_vertex(file):
-    position = file.read_double_vec4()
+    position = file.read_dvec4()
     file.read_boolean()
     strict = file.read_boolean()
     file.read_null(22)

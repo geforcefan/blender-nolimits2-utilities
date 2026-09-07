@@ -1,3 +1,5 @@
+import numpy
+
 from .math.vector import vec2
 
 
@@ -90,6 +92,24 @@ heartline_position_by_style_type = {
 }
 
 
+class Terrain:
+    def __init__(self, quad_size, heights):
+        self.quad_size = quad_size
+        self.heights = heights
+
+    def positions(self):
+        rows, columns = self.heights.shape
+        positions = numpy.empty((rows, columns, 3))
+        positions[..., 0] = (numpy.arange(columns) - (columns - 1) / 2.0) * self.quad_size
+        positions[..., 1] = self.heights
+        positions[..., 2] = ((rows - 1) / 2.0 - numpy.arange(rows))[:, None] * self.quad_size
+        return positions
+
+    def size(self):
+        rows, columns = self.heights.shape
+        return (columns - 1) * self.quad_size, (rows - 1) * self.quad_size
+
+
 class Coaster:
     def __init__(self, name=""):
         self.name = name
@@ -99,6 +119,7 @@ class Coaster:
 class Park:
     def __init__(self):
         self.coasters = []
+        self.terrain = None
 
     @staticmethod
     def heartline_position(spline_position, spline_position_offset, style_type):
