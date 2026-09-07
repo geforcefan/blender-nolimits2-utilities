@@ -3,16 +3,18 @@ from bpy_extras.io_utils import ImportHelper
 
 from ..reader.park_reader import read_park_file
 from .nolimits_curve_object import add_curve, park_suffix, select_only
+from .nolimits_terrain_object import add_terrain, add_water
 
 
 class NOLIMITS2_OT_import(bpy.types.Operator, ImportHelper):
     bl_idname = "nolimits2.import"
     bl_label = "Import from NoLimits 2"
-    bl_description = "Import a NoLimits 2 curve from a park or csv"
+    bl_description = "Import resources from a NoLimits 2 park or track spline export"
     bl_options = {'REGISTER', 'UNDO'}
 
     filename_ext = park_suffix
     filter_glob: bpy.props.StringProperty(default=f"*{park_suffix};*.csv", options={'HIDDEN'})
+    import_terrain: bpy.props.BoolProperty(name="Terrain", description="Terrain and water surface", default=True)
     custom_heartline: bpy.props.BoolProperty(name="Custom Heartline")
     heartline_position: bpy.props.FloatVectorProperty(name="Heartline", size=2, unit='LENGTH')
 
@@ -33,6 +35,10 @@ class NOLIMITS2_OT_import(bpy.types.Operator, ImportHelper):
             return []
 
         created = []
+        if self.import_terrain and park.terrain is not None:
+            park_name = bpy.path.display_name_from_filepath(self.filepath)
+            created.append(add_terrain(context, f"{park_name} Terrain", park.terrain))
+            created.append(add_water(context, f"{park_name} Water", *park.terrain.size()))
         for coaster_index, coaster in enumerate(park.coasters):
             for track_index, track in enumerate(coaster.tracks):
                 name = f"{coaster.name} Track {track_index}"
@@ -49,7 +55,7 @@ class NOLIMITS2_OT_import(bpy.types.Operator, ImportHelper):
                     curve_object.nolimits2_curve.spline = spline
                     created.append(curve_object)
         if not created:
-            self.report({'ERROR'}, f"No track in {self.filepath}")
+            self.report({'ERROR'}, f"Nothing to import from {self.filepath}")
         return created
 
     def import_track_spline(self, context):
@@ -71,4 +77,4 @@ class NOLIMITS2_OT_import(bpy.types.Operator, ImportHelper):
 
 
 def draw_import_menu(self, context):
-    self.layout.operator(NOLIMITS2_OT_import.bl_idname, text="NoLimits 2 Curve (.nl2park, .csv)")
+    self.layout.operator(NOLIMITS2_OT_import.bl_idname, text="NoLimits 2 (.nl2park, .csv)")

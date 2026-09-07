@@ -8,7 +8,7 @@ It replaces [BlenderNoLimitsCSVImporter](https://github.com/geforcefan/BlenderNo
 ## Supported features
 - [x] Track import from a park (.nl2park)
 - [x] Track import from a track spline export (.csv)
-- [ ] Terrain import
+- [x] Terrain import from a park (.nl2park), with the water surface
 
 ## Installation
 * Open the preferences, *Edit > Preferences*.
@@ -35,7 +35,7 @@ Or take the zip from the [releases](https://github.com/geforcefan/blender-nolimi
 
 ## Usage
 ### Tracks
-* Import from *File > Import > NoLimits 2 Curve (.nl2park, .csv)*. A park gives you a curve object per track, a track spline export gives you one.
+* Import from *File > Import > NoLimits 2 (.nl2park, .csv)*.
 
   <img src="docs/blender-import.jpg?raw=True" width="500">
 
@@ -50,3 +50,6 @@ Or take the zip from the [releases](https://github.com/geforcefan/blender-nolimi
 * The fields depend on the file. A park shows the coaster, the track and the choice between center of rails and editor spline, a csv export shows none of them. File and heartline are always there. Every change rebuilds the curve, *Reload* reads the file again after you saved in NL2.
 
   <img src="docs/blender-curve-panel.jpg?raw=True" width="360">
+
+### Terrain
+* A park import also gives you the terrain as a mesh, triangulated like NoLimits 2 does it, plus the water surface at height zero. Uncheck *Terrain* in the import dialog to leave both out.
